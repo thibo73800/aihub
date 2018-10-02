@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Metacar: Documentation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
+</head>
+<body>
+
+    <div id="env"></div>
+
+    <script src="https://cdn.jsdelivr.net/combine/npm/metacar@0.0.1,npm/metacar@0.1.0"></script>
+    <script type="text/javascript">
+        // Select a level
+        const level = metacar.level.level0;
+        // Create the environement
+        const env = new metacar.env("env", level);
+        env.carsMoving(false);
+        env.setAgentMotion(metacar.motion.ControlMotion);
+        let gather = false;
+
+        // Load it
+        env.load();
+
+        // TODO:
+        // Build the neural network you need for this task
+
+        env.loop(() => {
+            if (gather){
+                // This method is called at each update of the scene
+                const state = env.getState();
+                // TODO: Gather the information you need to train the NN
+            }
+        });
+
+        env.addEvent("Gather: On", () => {
+            gather = true;
+        });
+
+        env.addEvent("Gather: Off", () => {
+            gather = false;
+        });
+
+        env.addEvent("Train NN", () => {
+            // TODO: Train the neural network
+        });
+
+        env.addEvent("play", () => {
+            // TODO: Use the neural network you just trained to drive
+            // on the road
+            // The goal is to predict the steering angle
+            const steering = 0.;
+
+            const reward = env.step([1., steering]);
+        });
+    </script>
+</body>
+</html>
