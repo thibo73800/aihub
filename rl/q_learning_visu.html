@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+    </head>
+
+    <style media="screen">
+        body{
+            background: #efefef;
+        }
+
+        section{
+            position: relative;
+        }
+
+        .grid{
+            width: 900px;
+            height: 900px;
+            background: white;
+            margin: auto;
+            margin-top: 20px;
+        }
+
+        .state {
+            width: 298px;
+            height: 298px;
+            border: 1px solid #e0e0e0;
+            float: left;
+            position: relative;
+        }
+
+        .state h1{
+            position: absolute;
+            top: 98px;
+            margin: 0px;
+            font-size: 80px;
+            color: #8f8f8f;
+            left: 119px;
+        }
+
+        .left, .right, .up, .down {
+            position: absolute;
+            color:  #8f8f8f;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        .left {
+            top: 110px;
+            left: 10px;
+        }
+
+        .right {
+            top: 110px;
+            right: 10px;
+        }
+
+        .up {
+            top: 10px;
+            right: 130px;
+        }
+
+        .down {
+            bottom: 10px;
+            right: 130px;
+        }
+
+        #five {
+            background: #ff6060;
+        }
+
+        #three {
+            background: #92b77c;
+        }
+
+        .agent {
+            position: absolute;
+            width: 86px;
+            height: 81px;
+            background: blue;
+            z-index: 80;
+        }
+
+        button{
+            background: #4e4e4e;
+            border: none;
+            width: 100px;
+            height: 52px;
+            color: white;
+            font-weight: bold;
+            display: block;
+            margin: auto;
+            cursor: pointer;
+        }
+
+    </style>
+    <body>
+
+        <button id="button" type="button">Step</button>
+        <center><img src="update.png" alt="" width="800px" /></center>
+
+        <section class="grid">
+
+            <div class="agent" id="agent">
+            </div>
+
+            <div class="state" id="one">
+                <h1>1</h1>
+                <span class="left">
+                    <span id="1_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="1_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="1_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="1_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+
+            <div class="state" id="2">
+                <h1>2</h1>
+                <span class="left">
+                    <span id="2_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="2_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="2_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="2_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+            <div class="state" id="three">
+                <h1>3</h1>
+                <span class="left">
+                    <span id="3_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="3_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="3_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="3_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+            <div class="state" id="four">
+                <h1>4</h1>
+                <span class="left">
+                    <span id="4_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="4_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="4_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="4_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+            <div class="state" id="five">
+                <h1>5</h1>
+                <span class="left">
+                    <span id="5_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="5_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="5_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="5_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+            <div class="state" id="six">
+                <h1>6</h1>
+                <span class="left">
+                    <span id="6_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="6_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="6_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="6_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+            <div class="state" id="seven">
+                <h1>7</h1>
+                <span class="left">
+                    <span id="7_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="7_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="7_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="7_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+            <div class="state" id="height">
+                <h1>8</h1>
+                <span class="left">
+                    <span id="8_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="8_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="8_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="8_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+            <div class="state" id="nine">
+                <h1>9</h1>
+                <span class="left">
+                    <span id="9_0">0</span>
+                    <br>
+                    &#8592;
+                </span>
+
+                <span class="right">
+                    <span id="9_1">0</span>
+                    <br>
+                    &#8594;
+                </span>
+
+                <span class="up">
+                    <span id="9_2">0</span>
+                    <br>
+                    &#8593;
+                </span>
+
+                <span class="down">
+                    <span id="9_3">0</span>
+                    <br>
+                    &#8595;
+                </span>
+            </div>
+        </section>
+
+        <script type="application/javascript">
+
+        var agent = document.getElementById("agent");
+        var agent_pos = {y: 0, x: 0};
+        var grid = [
+                [0, 0, 1],
+                [0, -1, 0],
+                [0, 0, 0]
+        ];
+
+        agent.style.top = "103px";
+        agent.style.left = "98px";
+
+        var button = document.getElementById("button");
+        var state = agent_pos.y*3+agent_pos.x+1;
+
+        var Q = [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+        ];
+
+        function step(action){
+            if (action == 0){ // left
+                agent_pos.x = Math.min(2, Math.max(0, agent_pos.x - 1));
+            }
+            else if (action == 1){ // right
+                agent_pos.x = Math.min(2, Math.max(0, agent_pos.x + 1));
+            }
+            else if (action == 2){ // up
+                agent_pos.y = Math.min(2, Math.max(0, agent_pos.y - 1));
+            }
+            else if (action == 3){ // dpwn
+                agent_pos.y = Math.min(2, Math.max(0, agent_pos.y + 1));
+            }
+
+            agent.style.top = (agent_pos.y*298)+103 + "px";
+            agent.style.left = (agent_pos.x*298)+98 + "px";
+
+            state = agent_pos.y*3+agent_pos.x+1;
+            return {r: grid[agent_pos.y][agent_pos.x], stp1: state};
+        }
+
+        function getRandomInt(max) {
+          return Math.floor(Math.random() * Math.floor(max));
+        }
+
+        function argMax(array) {
+          return array.map((x, i) => [x, i]).reduce((r, a) => (a[0] > r[0] ? a : r))[1];
+        }
+
+        function take_action(st, eps){
+            if (Math.random() < eps){
+                action = getRandomInt(4);
+            }
+            else{
+                action = argMax(Q[st])
+            }
+            return action;
+        }
+
+        button.addEventListener("click", () => {
+            var gamma = 0.9;
+            var lr = 0.1;
+            var st = state;
+            var at = take_action(st, 1.0);
+            var {r, stp1} = step(at);
+
+            var atp1 = take_action(stp1, 0.0);
+            Q[st][at] = Q[st][at] + lr*(r + gamma*Q[stp1][atp1] - Q[st][at])
+
+            document.getElementById(st+"_"+at).innerHTML = Math.round(Q[st][at] * 100) / 100;
+
+            if (Q[st][at] == 0){
+                document.getElementById(st+"_"+at).style.color = "#dcdcdc";
+            }
+            else if (Q[st][at] < 0){
+                document.getElementById(st+"_"+at).style.color = "#ff6060";
+            }
+            else {
+                document.getElementById(st+"_"+at).style.color = "#92b77c";
+            }
+
+
+        });
+        </script>
+    </body>
+</html>
