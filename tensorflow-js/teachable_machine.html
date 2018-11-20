@@ -47,6 +47,7 @@
         /*
             Create the model
         */
+
         // Input
         const input = tf.input({batchShape: [null, 1000]});
         // Output
@@ -84,6 +85,7 @@
             show_class = true;
         }
 
+
         function train(){
             // Train the model
             console.log("Train");
@@ -92,7 +94,7 @@
 
             model.fit(tf_features, tf_targets, {
               batchSize: 32,
-              epochs: 100,
+              epochs: 75,
               callbacks: {
                 onBatchEnd: async (batch, logs) => {
                   // Log the cost for every batch that is fed.
@@ -102,6 +104,7 @@
               }
             });
         }
+
 
         function add_features(feature){
             // Add features to one class if one button is pressed
@@ -136,15 +139,15 @@
           await setupWebcam();
           // Wait for the webcam to be setup
           while (true) {
-            const result = await net.classify(webcamElement);
+            //const result = await net.classify(webcamElement);
 
-            //const feature = await net.infer(webcamElement);
-            // console.log(feature);
-            // console.log(feature.buffer().values);
-            //add_features(Array.from(feature.buffer().values));
+            const feature = await net.infer(webcamElement);
+            //console.log(feature);
+            //console.log(feature.buffer().values);
+            add_features(Array.from(feature.buffer().values));
 
-            console.log("Prediction", result[0].className);
-            console.log("Probability", result[0].probability);
+            //console.log("Prediction", result[0].className);
+            //console.log("Probability", result[0].probability);
 
             if (show_class){
                 const prediction = model.predict(feature);
