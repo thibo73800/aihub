@@ -1,0 +1,166 @@
+<html>
+  <head>
+    <!-- Load the latest version of TensorFlow.js -->
+    <script src="https://unpkg.com/@tensorflow/tfjs"></script>
+    <!-- Load MobileNet -->
+    <script src="https://unpkg.com/@tensorflow-models/mobilenet"></script>
+  </head>
+  <body>
+
+    <div id="console"></div>
+    // Webcam
+    <video autoplay playsinline muted id="webcam" width="224" height="224"></video>
+
+    <!-- Buttons -->
+    <button id="left">Left</button>
+    <button id="right">Right</button>
+    <button id="up">Up</button>
+    <button id="down">Down</button>
+    <br>
+    <button onclick="train()" id="train">train</button>
+    <button onclick="show()" id="train">show</button>
+
+    <script>
+
+        const webcamElement = document.getElementById('webcam');
+
+        // Select buttons
+        const left = document.getElementById("left");
+        const right = document.getElementById("right");
+        const up = document.getElementById("up");
+        const down = document.getElementById("down")
+
+        var show_class = false;
+
+        var features = [];
+        var targets = [];
+
+        left.addEventListener("mousedown", () => { left.clicked = true; });
+        right.addEventListener("mousedown", () => { right.clicked = true; });
+        down.addEventListener("mousedown", () => { down.clicked = true; });
+        up.addEventListener("mousedown", () => { up.clicked = true; });
+        left.addEventListener("mouseup", () => { left.clicked = false; });
+        right.addEventListener("mouseup", () => { right.clicked = false; });
+        down.addEventListener("mouseup", () => { down.clicked = false; });
+        up.addEventListener("mouseup", () => { up.clicked = false; });
+
+        /*
+            Create the model
+        */
+        // Input
+        const input = tf.input({batchShape: [null, 1000]});
+        // Output
+        const output = tf.layers.dense({useBias: true, units: 4, activation: 'softmax'}).apply(input);
+        // Create the model
+        const model = tf.model({inputs: input, outputs: output});
+
+        // Optimize
+        const optimizer = tf.train.adam(0.01);
+        // Compile the model
+        model.compile({optimizer: optimizer, loss: 'categoricalCrossentropy'});
+
+
+        // Methode used to laod the webcam
+        async function setupWebcam() {
+          return new Promise((resolve, reject) => {
+            const navigatorAny = navigator;
+            navigator.getUserMedia = navigator.getUserMedia ||
+                navigatorAny.webkitGetUserMedia || navigatorAny.mozGetUserMedia ||
+                navigatorAny.msGetUserMedia;
+            if (navigator.getUserMedia) {
+              navigator.getUserMedia({video: true},
+                stream => {
+                  webcamElement.srcObject = stream;
+                  webcamElement.addEventListener('loadeddata',  () => resolve(), false);
+                },
+                error => reject());
+            } else {
+              reject();
+            }
+          });
+        }
+
+        function show(){
+            show_class = true;
+        }
+
+        function train(){
+            // Train the model
+            console.log("Train");
+            const tf_features = tf.tensor2d(features, shape=[features.length, 1000])
+            const tf_targets = tf.tensor(targets);
+
+            model.fit(tf_features, tf_targets, {
+              batchSize: 32,
+              epochs: 100,
+              callbacks: {
+                onBatchEnd: async (batch, logs) => {
+                  // Log the cost for every batch that is fed.
+                  console.log(logs.loss.toFixed(5));
+                  await tf.nextFrame();
+                }
+              }
+            });
+        }
+
+        function add_features(feature){
+            // Add features to one class if one button is pressed
+            if (left.clicked){
+                console.log("gather left");
+                features.push(feature);
+                targets.push([1., 0., 0., 0.]);
+            }
+            else if (right.clicked){
+                console.log("gather right");
+                features.push(feature);
+                targets.push([0., 1., 0., 0.]);
+            }
+            else if (up.clicked){
+                console.log("gather up");
+                features.push(feature);
+                targets.push([0., 0., 1., 0.]);
+            }
+            else if (down.clicked){
+                console.log("gather down");
+                features.push(feature);
+                targets.push([0., 0., 0., 1.]);
+            }
+        }
+
+        async function app() {
+          console.log('Loading mobilenet..');
+          // Load the model.
+          net = await mobilenet.load();
+          // Model loaded
+          console.log('Sucessfully loaded model');
+          await setupWebcam();
+          // Wait for the webcam to be setup
+          while (true) {
+            const result = await net.classify(webcamElement);
+
+            //const feature = await net.infer(webcamElement);
+            // console.log(feature);
+            // console.log(feature.buffer().values);
+            //add_features(Array.from(feature.buffer().values));
+
+            console.log("Prediction", result[0].className);
+            console.log("Probability", result[0].probability);
+
+            if (show_class){
+                const prediction = model.predict(feature);
+                const labels = ["Left", "Right", "Up", "Down"];
+                cl = prediction.argMax(1).buffer().values[0];
+                console.log(cl, labels[cl]);
+            }
+
+
+            // Wait for the next frame
+            await tf.nextFrame();
+          }
+        }
+
+        app();
+
+    </script>
+  </body>
+</html>
