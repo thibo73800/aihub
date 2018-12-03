@@ -31,7 +31,7 @@ class EnvGrid(object):
         """
         self.y = 2
         self.x = 0
-        return (self.y*2+self.x+1)
+        return (self.y*3+self.x+1)
 
     def step(self, action):
         """
