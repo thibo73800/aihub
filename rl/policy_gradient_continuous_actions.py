@@ -12,7 +12,7 @@ class Buffer:
     def __init__(self, obs_dim, act_dim, size, gamma=0.99, lam=0.95):
         self.obs_buf = np.zeros(Buffer.combined_shape(size, obs_dim), dtype=np.float32)
         # Actions buffer
-        self.act_buf = np.zeros(size, dtype=np.float32)
+        self.act_buf = np.zeros((size, act_dim), dtype=np.float32)
         # Advantages buffer
         self.adv_buf = np.zeros(size, dtype=np.float32)
         # Rewards buffer
@@ -65,7 +65,8 @@ class Buffer:
         self.ptr, self.path_start_idx = 0, 0
         # the next two lines implement the advantage normalization trick
         # Normalize the Advantage
-        self.adv_buf = (self.adv_buf - np.mean(self.adv_buf)) / np.std(self.adv_buf)
+        if np.std(self.adv_buf) != 0:
+            self.adv_buf = (self.adv_buf - np.mean(self.adv_buf)) / np.std(self.adv_buf)
         return self.obs_buf, self.act_buf, self.adv_buf, self.logp_buf
 
 
@@ -109,7 +110,7 @@ class PolicyGradient(object):
         # logp_a_op: Used to get the log likelihood of taking action a with the current policy
         # logp_pi_op: Used to get the log likelihood of the predicted action @pi_op
         # log_std: Used to get the currently used log_std
-        self.mu_op, self.pi_op, self.logp_a_op, self.logp_pi_op = PolicyGradient.mlp(
+        self.mu_op, self.pi_op, self.logp_a_op, self.logp_pi_op, self.std = PolicyGradient.mlp(
             tf_map=self.tf_map,
             tf_a=self.tf_a,
             action_space=self.action_space,
@@ -154,8 +155,11 @@ class PolicyGradient(object):
         pi_loss_list = []
         entropy_list = []
 
+        import time
+        t = time.time()
+
         for step in range(5):
-            _, entropy, pi_loss = self.sess.run([self.train_pi, self.approx_ent, self.pi_loss], feed_dict= {
+            _, entropy, pi_loss, std = self.sess.run([self.train_pi, self.approx_ent, self.pi_loss, self.std], feed_dict= {
                 self.tf_map: obs_buf,
                 self.tf_a:act_buf,
                 self.tf_adv: adv_buf
@@ -164,7 +168,7 @@ class PolicyGradient(object):
             pi_loss_list.append(pi_loss)
             entropy_list.append(entropy)
 
-        print("Entropy : %s" % (np.mean(entropy_list)), end="\r")
+        print("Std: %.2f, Entropy : %.2f" % (std[0], np.mean(entropy_list)), end="\r")
 
 
     @staticmethod
@@ -183,10 +187,19 @@ class PolicyGradient(object):
         # Map of the game
         tf_map = tf.placeholder(tf.float32, shape=(None, *map_space), name="tf_map")
         # Possible actions (Should be two: x,y for the beacon game)
-        tf_a = tf.placeholder(tf.int32, shape=(None,), name="tf_a")
+        tf_a = tf.placeholder(tf.float32, shape=(None, action_space), name="tf_a")
         # Advantage
         tf_adv = tf.placeholder(tf.float32, shape=(None,), name="tf_adv")
         return tf_map, tf_a, tf_adv
+
+    @staticmethod
+    def gaussian_likelihood(x, mu, log_std):
+        # Compute the gaussian likelihood of x with a normal gaussian distribution of mean @mu
+        # and a std @log_std
+        pre_sum = -0.5 * (((x-mu)/(tf.exp(log_std)+1e-8))**2 + 2*log_std + np.log(2*np.pi))
+        return tf.reduce_sum(pre_sum, axis=1)
+        #pre_sum = (1.*tf.exp((-(x-mu)**2)/(2*std**2)))/tf.sqrt(2*3.14*std**2)
+        #retun
 
     @staticmethod
     def mlp(tf_map, tf_a, action_space, seed=None):
@@ -198,20 +211,18 @@ class PolicyGradient(object):
 
         flatten = tf.layers.flatten(tf_map_expand)
         hidden = tf.layers.dense(flatten, units=256, activation=tf.nn.relu)
-        spacial_action_logits = tf.layers.dense(hidden, units=action_space, activation=None)
+        mu = tf.layers.dense(hidden, units=action_space, activation=tf.nn.relu)
 
-        # Add take the log of the softmax
-        logp_all = tf.nn.log_softmax(spacial_action_logits)
-        # Take random actions according to the logits (Exploration)
-        pi_op = tf.squeeze(tf.multinomial(spacial_action_logits,1), axis=1)
-        mu = tf.argmax(spacial_action_logits, axis=1)
+        log_std = tf.get_variable(name='log_std', initializer=-0.5*np.ones(action_space, dtype=np.float32))
+        std = tf.exp(log_std)
+        pi_op = mu + tf.random_normal(tf.shape(mu)) * std
 
         # Gives log probability, according to  the policy, of taking actions @a in states @x
-        logp_a_op = tf.reduce_sum(tf.one_hot(tf_a, depth=action_space) * logp_all, axis=1)
+        logp_a_op = PolicyGradient.gaussian_likelihood(tf_a, mu, log_std)
         # Gives log probability, according to the policy, of the action sampled by pi.
-        logp_pi_op = tf.reduce_sum(tf.one_hot(pi_op, depth=action_space) * logp_all, axis=1)
+        logp_pi_op = PolicyGradient.gaussian_likelihood(pi_op, mu, log_std)
 
-        return mu, pi_op, logp_a_op, logp_pi_op
+        return mu, pi_op, logp_a_op, logp_pi_op, std
 
     @staticmethod
     def net_objectives(logp_a_op, tf_adv, clip_ratio=0.2):
@@ -249,16 +260,14 @@ class GridWorld(object):
         state[self.position[0]][self.position[1]] = 1
         return state
 
-    def step(self, action):
-        if action == 0: # Top
-            self.position = [(self.position[0] - 1) % 7, self.position[1]]
-        elif action == 1: # Left
-            self.position = [self.position[0], (self.position[1] - 1) % 7]
-        elif action == 2: # Right
-            self.position = [self.position[0], (self.position[1] + 1) % 7]
-        elif action == 3: # Down
-            self.position = [(self.position[0] + 1) % 7, self.position[1]]
+    def step(self, y, x):
+        # y and x coordinates
 
+        # Move in the direction of the "click"
+        self.position = [
+            self.position[0] + min(1, max(-1, (y - self.position[0]))),
+            self.position[1] + min(1, max(-1, (x - self.position[1])))
+        ]
         reward = self.rewards[self.position[0]][self.position[1]]
         done = False if reward == 0 else True
         state = self.gen_state()
@@ -292,7 +301,7 @@ def main():
     # Create the NET class
     agent = PolicyGradient(
     	input_space=(7, 7),
-    	action_space=4,
+    	action_space=2,
     	pi_lr=0.001,
     	buffer_size=buffer_size,
     	seed=42
@@ -308,16 +317,28 @@ def main():
     rewards = []
 
     b = 0
+    display = False
 
-    for epoch in range(10000):
+    for epoch in range(100000):
 
         done = False
         state = grid.gen_state()
 
-        while not done:
+        s = 0
+        while not done and s < 20:
+            s += 1
             _, pi, logpi = agent.step([state])
-            n_state, reward, done = grid.step(pi[0])
-            agent.store(state, pi[0], reward, logpi)
+
+            y = max(0, min(6, int(round((pi[0][0]+1.) / 2*6))))
+            x = max(0, min(6, int(round((pi[0][1]+1.) / 2*6))))
+
+            if display:
+                import time
+                time.sleep(0.1)
+                grid.display()
+
+            n_state, reward, done = grid.step(y, x)
+            agent.store(state, pi[0], -0.1 if reward == 0 else reward, logpi)
             b += 1
 
             state = n_state
@@ -334,7 +355,7 @@ def main():
                 b = 0
 
         if epoch % 1000 == 0:
-            print("Rewards mean:%s" % np.mean(rewards))
+            print("\nEpoch: %s Rewards mean:%s" % (epoch, np.mean(rewards)))
 
     for epoch in range(10):
         import time
@@ -344,8 +365,12 @@ def main():
 
         while not done:
             time.sleep(1)
-            _, pi, logpi = agent.step([state])
-            n_state, _, done = grid.step(pi[0])
+            mu, pi, logpi = agent.step([state])
+
+            y = max(0, min(6, int(round((pi[0][0]+1.) / 2*6))))
+            x = max(0, min(6, int(round((pi[0][1]+1.) / 2*6))))
+
+            n_state, _, done = grid.step(y, x)
             grid.display()
             state = n_state
         print("reward=>", reward)
