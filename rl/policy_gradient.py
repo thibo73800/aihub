@@ -164,7 +164,7 @@ class PolicyGradient(object):
             pi_loss_list.append(pi_loss)
             entropy_list.append(entropy)
 
-        print("Entropy : %s" % (np.mean(entropy_list)), end="\r")
+        print("Entropy : %s, Loss: %s" % (np.mean(entropy_list), np.mean(pi_loss_list)), end="\r")
 
 
     @staticmethod
