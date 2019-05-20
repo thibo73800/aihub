@@ -1,0 +1,16 @@
+{
+  "name": "metacar-demo",
+  "version": "0.0.1",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Thibault Neveu",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "pixi.js": "^4.8.1"
+  }
+}
