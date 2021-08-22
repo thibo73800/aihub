@@ -101,6 +101,5 @@ if __name__ == '__main__':
 
             st = stp1
 
-    for s in range(0, 9):
     for s in range(9):
         print(s, Q[s])
