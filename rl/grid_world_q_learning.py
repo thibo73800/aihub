@@ -31,7 +31,7 @@ class EnvGrid(object):
         """
         self.y = 2
         self.x = 0
-        return (self.y*3+self.x+1)
+        return (self.y*3+self.x)
 
     def step(self, action):
         """
@@ -40,7 +40,7 @@ class EnvGrid(object):
         self.y = max(0, min(self.y + self.actions[action][0],2))
         self.x = max(0, min(self.x + self.actions[action][1],2))
 
-        return (self.y*3+self.x+1) , self.grid[self.y][self.x]
+        return (self.y*3+self.x) , self.grid[self.y][self.x]
 
     def show(self):
         """
@@ -80,7 +80,6 @@ if __name__ == '__main__':
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
-        [0, 0, 0, 0],
         [0, 0, 0, 0]
     ]
 
@@ -102,5 +101,5 @@ if __name__ == '__main__':
 
             st = stp1
 
-    for s in range(1, 10):
+    for s in range(9):
         print(s, Q[s])
